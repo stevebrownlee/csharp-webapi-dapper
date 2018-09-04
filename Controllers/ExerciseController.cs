@@ -33,18 +33,64 @@ namespace NSSWeb.Controllers
 
         // GET api/exercises
         [HttpGet]
-        public async Task<IActionResult> Get(string language)
+        public async Task<IActionResult> Get(string q, string _include, string language)
         {
-            string sql = "SELECT Id, Name, Language FROM Exercise";
+            // Store URL parameters in a tuple, just because I can
+            (string q, string _include, string language) filter = (q, _include, language);
 
-            // If language query string parameter is specified
-            if (language != null)
+            string sqlSelect = "SELECT e.Id, e.Name, e.Language";
+            string sqlFrom = "FROM Exercise e";
+            string sqlJoin = "";
+            string sqlWhere = "WHERE 1=1";
+
+            string isQ = $"AND (e.Language LIKE '%{q}%' OR e.Name LIKE '%{q}%')";
+            string isLanguage = $"AND e.Language = '{filter.language}'";
+            string studentsIncluded = $@"JOIN StudentExercise se ON e.Id = se.ExerciseId
+                                           JOIN Student s ON se.StudentId = s.Id";
+
+            if (filter._include == "students")
             {
-                sql = $"{sql} WHERE Language = '{language}'";
+                sqlSelect = $@"{sqlSelect},
+                       s.Id,
+                       s.FirstName,
+                       s.LastName,
+                       s.SlackHandle";
+                sqlJoin = $"{sqlJoin} {studentsIncluded}";
             }
 
+            if (filter.q != null)
+            {
+                sqlWhere = $"{sqlWhere} {isQ}";
+            }
+
+            if (filter.language != null)
+            {
+                sqlWhere = $"{sqlWhere} {isLanguage}";
+            }
+
+            string sql = $"{sqlSelect} {sqlFrom} {sqlJoin} {sqlWhere}";
+            Console.WriteLine(sql);
             using (IDbConnection conn = Connection)
             {
+                if (filter._include == "students")
+                {
+                    Dictionary<int, Exercise> studentExercises = new Dictionary<int, Exercise>();
+
+                    var fullExercises = await conn.QueryAsync<Exercise, Student, Exercise>(
+                        sql,
+                        (exercise, student) =>
+                        {
+                            if (!studentExercises.ContainsKey(exercise.Id))
+                            {
+                                studentExercises[exercise.Id] = exercise;
+                            }
+                            studentExercises[exercise.Id].AssignedStudents.Add(student);
+                            return exercise;
+                        }
+                    );
+                    return Ok(fullExercises);
+
+                }
                 IEnumerable<Exercise> exercises = await conn.QueryAsync<Exercise>(sql);
                 return Ok(exercises);
             }
@@ -118,8 +164,20 @@ namespace NSSWeb.Controllers
 
         // DELETE api/exercises/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
+            string sql = $@"DELETE FROM Exercise WHERE Id = {id}";
+
+            using (IDbConnection conn = Connection)
+            {
+                int rowsAffected = await conn.ExecuteAsync(sql);
+                if (rowsAffected > 0)
+                {
+                    return new StatusCodeResult(StatusCodes.Status204NoContent);
+                }
+                throw new Exception("No rows affected");
+            }
+
         }
 
         private bool ExerciseExists(int id)
@@ -130,6 +188,5 @@ namespace NSSWeb.Controllers
                 return conn.Query<Exercise>(sql).Count() > 0;
             }
         }
-
     }
 }

@@ -7,6 +7,6 @@ namespace NSSWeb.Data
         public int Id { get; set; }
         public string Name { get; set; }
         public string Language { get; set; }
-        public List<Student> AssignedStudents { get; set; }
+        public List<Student> AssignedStudents { get; set; } = new List<Student>();
     }
 }
