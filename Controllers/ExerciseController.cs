@@ -35,7 +35,7 @@ namespace NSSWeb.Controllers
         [HttpGet]
         public async Task<IActionResult> Get(string q, string _include, string language)
         {
-            // Store URL parameters in a tuple, just because I can
+            // Store URL parameters in a tuple
             (string q, string _include, string language) filter = (q, _include, language);
 
             string sqlSelect = "SELECT e.Id, e.Name, e.Language";
