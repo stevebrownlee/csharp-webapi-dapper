@@ -36,7 +36,7 @@ namespace NSSWeb.Controllers
         public async Task<IActionResult> Get(string q, string _include, string language)
         {
             // Store URL parameters in a tuple
-            (string q, string _include, string language) filter = (q, _include, language);
+            (string q, string include, string language) filter = (q, _include, language);
 
             string sqlSelect = "SELECT e.Id, e.Name, e.Language";
             string sqlFrom = "FROM Exercise e";
@@ -45,17 +45,34 @@ namespace NSSWeb.Controllers
 
             string isQ = $"AND (e.Language LIKE '%{q}%' OR e.Name LIKE '%{q}%')";
             string isLanguage = $"AND e.Language = '{filter.language}'";
-            string studentsIncluded = $@"JOIN StudentExercise se ON e.Id = se.ExerciseId
-                                           JOIN Student s ON se.StudentId = s.Id";
 
-            if (filter._include == "students")
+            string sqlSelectStudents = @"
+                       ,s.Id
+                       ,s.FirstName
+                       ,s.LastName
+                       ,s.SlackHandle";
+            string studentsIncluded = "JOIN Student s ON se.StudentId = s.Id";
+            string studentsExerciseIncluded = "JOIN StudentExercise se ON e.Id = se.ExerciseId";
+
+
+            string sqlSelectInstructors = @"
+                       ,i.Id
+                       ,i.FirstName
+                       ,i.LastName
+                       ,i.Specialty
+                       ,i.SlackHandle";
+            string instructorsIncluded = "JOIN Instructor i ON i.Id = se.InstructorId";
+
+            if (filter.include.Contains("students"))
             {
-                sqlSelect = $@"{sqlSelect},
-                       s.Id,
-                       s.FirstName,
-                       s.LastName,
-                       s.SlackHandle";
-                sqlJoin = $"{sqlJoin} {studentsIncluded}";
+                sqlSelect = $@"{sqlSelect} {sqlSelectStudents}";
+                sqlJoin = $"{sqlJoin} {studentsExerciseIncluded} {studentsIncluded}";
+            }
+
+            if (filter.include.Contains("instructors"))
+            {
+                sqlSelect = $@"{sqlSelect} {sqlSelectInstructors}";
+                sqlJoin = $"{sqlJoin} {studentsExerciseIncluded} {instructorsIncluded}";
             }
 
             if (filter.q != null)
@@ -72,7 +89,7 @@ namespace NSSWeb.Controllers
             Console.WriteLine(sql);
             using (IDbConnection conn = Connection)
             {
-                if (filter._include == "students")
+                if (filter.include == "students")
                 {
                     Dictionary<int, Exercise> studentExercises = new Dictionary<int, Exercise>();
 
