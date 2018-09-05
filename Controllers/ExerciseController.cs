@@ -88,7 +88,7 @@ namespace NSSWeb.Controllers
                             return exercise;
                         }
                     );
-                    return Ok(fullExercises);
+                    return Ok(studentExercises.Values);
 
                 }
                 IEnumerable<Exercise> exercises = await conn.QueryAsync<Exercise>(sql);
