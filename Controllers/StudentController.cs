@@ -14,11 +14,11 @@ namespace NSSWeb.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    public class InstructorsController : ControllerBase
+    public class StudentsController : ControllerBase
     {
         private readonly IConfiguration _config;
 
-        public InstructorsController(IConfiguration config)
+        public StudentsController(IConfiguration config)
         {
             _config = config;
         }
@@ -31,21 +31,20 @@ namespace NSSWeb.Controllers
             }
         }
 
-        // GET api/instructors
+        // GET api/students
         [HttpGet]
         public async Task<IActionResult> Get(string q)
         {
             string sql = @"
             SELECT
-                i.Id,
-                i.FirstName,
-                i.LastName,
-                i.SlackHandle,
-                i.Specialty,
+                s.Id,
+                s.FirstName,
+                s.LastName,
+                s.SlackHandle,
                 c.Id,
                 c.Name
-            FROM Instructor i
-            JOIN Cohort c ON i.CohortId = c.Id
+            FROM Student s
+            JOIN Cohort c ON s.CohortId = c.Id
             WHERE 1=1
             ";
 
@@ -55,31 +54,29 @@ namespace NSSWeb.Controllers
                     AND i.FirstName LIKE '%{q}%'
                     OR i.LastName LIKE '%{q}%'
                     OR i.SlackHandle LIKE '%{q}%'
-                    OR i.Specialty LIKE '%{q}%'
                 ";
                 sql = $"{sql} {isQ}";
             }
 
-
-
             Console.WriteLine(sql);
+
             using (IDbConnection conn = Connection)
             {
 
-                IEnumerable<Instructor> instructors = await conn.QueryAsync<Instructor, Cohort, Instructor>(
+                IEnumerable<Student> students = await conn.QueryAsync<Student, Cohort, Student>(
                     sql,
-                    (instructor, cohort) =>
+                    (student, cohort) =>
                     {
-                        instructor.Cohort = cohort;
-                        return instructor;
+                        student.Cohort = cohort;
+                        return student;
                     }
                 );
-                return Ok(instructors);
+                return Ok(students);
             }
         }
 
-        // GET api/instructors/5
-        [HttpGet("{id}", Name = "GetInstructor")]
+        // GET api/students/5
+        [HttpGet("{id}", Name = "GetStudent")]
         public async Task<IActionResult> Get([FromRoute]int id)
         {
             string sql = $@"
@@ -90,49 +87,47 @@ namespace NSSWeb.Controllers
                 i.SlackHandle,
                 i.Specialty,
                 i.CohortId
-            FROM Instructor i
+            FROM Student i
             WHERE i.Id = {id}
             ";
 
             using (IDbConnection conn = Connection)
             {
-                IEnumerable<Instructor> instructors = await conn.QueryAsync<Instructor>(sql);
-                return Ok(instructors);
+                IEnumerable<Student> students = await conn.QueryAsync<Student>(sql);
+                return Ok(students);
             }
         }
 
-        // POST api/instructors
+        // POST api/students
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] Instructor instructor)
+        public async Task<IActionResult> Post([FromBody] Student student)
         {
-            string sql = $@"INSERT INTO Instructor VALUES
+            string sql = $@"INSERT INTO Student VALUES
             (
                 null,
-                '{instructor.FirstName}'
-                ,'{instructor.LastName}'
-                ,'{instructor.SlackHandle}'
-                ,'{instructor.Specialty}'
+                '{student.FirstName}'
+                ,'{student.LastName}'
+                ,'{student.SlackHandle}'
             );
-            select seq from sqlite_sequence where name='Instructor';";
+            select seq from sqlite_sequence where name='Student';";
 
             using (IDbConnection conn = Connection)
             {
                 var newId = (await conn.QueryAsync<int>(sql)).Single();
-                instructor.Id = newId;
-                return CreatedAtRoute("GetInstructor", new { id = newId }, instructor);
+                student.Id = newId;
+                return CreatedAtRoute("GetStudent", new { id = newId }, student);
             }
         }
 
-        // PUT api/instructors/5
+        // PUT api/students/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody] Instructor instructor)
+        public async Task<IActionResult> Put(int id, [FromBody] Student student)
         {
             string sql = $@"
-            UPDATE Instructor
-            SET FirstName = '{instructor.FirstName}',
-                LastName = '{instructor.LastName}',
-                SlackHandle = '{instructor.SlackHandle}',
-                Specialty = '{instructor.Specialty}'
+            UPDATE Student
+            SET FirstName = '{student.FirstName}',
+                LastName = '{student.LastName}',
+                SlackHandle = '{student.SlackHandle}'
             WHERE Id = {id}";
 
             try
@@ -149,7 +144,7 @@ namespace NSSWeb.Controllers
             }
             catch (Exception)
             {
-                if (!InstructorExists(id))
+                if (!StudentExists(id))
                 {
                     return NotFound();
                 }
@@ -160,11 +155,11 @@ namespace NSSWeb.Controllers
             }
         }
 
-        // DELETE api/instructors/5
+        // DELETE api/students/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            string sql = $@"DELETE FROM Instructor WHERE Id = {id}";
+            string sql = $@"DELETE FROM Student WHERE Id = {id}";
 
             using (IDbConnection conn = Connection)
             {
@@ -178,12 +173,12 @@ namespace NSSWeb.Controllers
 
         }
 
-        private bool InstructorExists(int id)
+        private bool StudentExists(int id)
         {
-            string sql = $"SELECT Id FROM Instructor WHERE Id = {id}";
+            string sql = $"SELECT Id FROM Student WHERE Id = {id}";
             using (IDbConnection conn = Connection)
             {
-                return conn.Query<Instructor>(sql).Count() > 0;
+                return conn.Query<Student>(sql).Count() > 0;
             }
         }
     }

@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace NSSWeb.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class ExercisesController : ControllerBase
     {
@@ -63,13 +63,13 @@ namespace NSSWeb.Controllers
                        ,i.SlackHandle";
             string instructorsIncluded = "JOIN Instructor i ON i.Id = se.InstructorId";
 
-            if (filter.include.Contains("students"))
+            if (filter.include != null && filter.include.Contains("students"))
             {
                 sqlSelect = $@"{sqlSelect} {sqlSelectStudents}";
                 sqlJoin = $"{sqlJoin} {studentsExerciseIncluded} {studentsIncluded}";
             }
 
-            if (filter.include.Contains("instructors"))
+            if (filter.include != null && filter.include.Contains("instructors"))
             {
                 sqlSelect = $@"{sqlSelect} {sqlSelectInstructors}";
                 sqlJoin = $"{sqlJoin} {studentsExerciseIncluded} {instructorsIncluded}";
