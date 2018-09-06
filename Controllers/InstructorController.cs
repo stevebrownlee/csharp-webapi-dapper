@@ -31,7 +31,7 @@ namespace NSSWeb.Controllers
             }
         }
 
-        // GET api/instructors
+        // GET /instructors
         [HttpGet]
         public async Task<IActionResult> Get(string q)
         {
@@ -60,8 +60,6 @@ namespace NSSWeb.Controllers
                 sql = $"{sql} {isQ}";
             }
 
-
-
             Console.WriteLine(sql);
             using (IDbConnection conn = Connection)
             {
@@ -78,7 +76,7 @@ namespace NSSWeb.Controllers
             }
         }
 
-        // GET api/instructors/5
+        // GET /instructors/5
         [HttpGet("{id}", Name = "GetInstructor")]
         public async Task<IActionResult> Get([FromRoute]int id)
         {
@@ -101,7 +99,7 @@ namespace NSSWeb.Controllers
             }
         }
 
-        // POST api/instructors
+        // POST /instructors
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] Instructor instructor)
         {
@@ -117,13 +115,13 @@ namespace NSSWeb.Controllers
 
             using (IDbConnection conn = Connection)
             {
-                var newId = (await conn.QueryAsync<int>(sql)).Single();
+                int newId = (await conn.QueryAsync<int>(sql)).Single();
                 instructor.Id = newId;
                 return CreatedAtRoute("GetInstructor", new { id = newId }, instructor);
             }
         }
 
-        // PUT api/instructors/5
+        // PUT /instructors/5
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(int id, [FromBody] Instructor instructor)
         {
@@ -160,7 +158,7 @@ namespace NSSWeb.Controllers
             }
         }
 
-        // DELETE api/instructors/5
+        // DELETE /instructors/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {

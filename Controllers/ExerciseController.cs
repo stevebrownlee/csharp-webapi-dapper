@@ -31,7 +31,12 @@ namespace NSSWeb.Controllers
             }
         }
 
-        // GET api/exercises
+        /*
+            GET /exercises?q=test
+            GET /exercises?_include=students
+            GET /exercises?language=JavaScript
+            GET /exercises?q=test&_include=students
+         */
         [HttpGet]
         public async Task<IActionResult> Get(string q, string _include, string language)
         {
@@ -113,7 +118,7 @@ namespace NSSWeb.Controllers
             }
         }
 
-        // GET api/exercises/5
+        // GET /exercises/5
         [HttpGet("{id}", Name = "GetExercise")]
         public async Task<IActionResult> Get([FromRoute]int id)
         {
@@ -126,7 +131,7 @@ namespace NSSWeb.Controllers
             }
         }
 
-        // POST api/exercises
+        // POST /exercises
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] Exercise exercise)
         {
@@ -144,9 +149,21 @@ namespace NSSWeb.Controllers
             }
         }
 
-        // PUT api/exercises/5
+        /*
+            PUT /exercises/5
+
+            The [HttpPut] attribute ensures that this method will handle any
+            request to a `/exercises/{id}` with the PUT HTTP verb. Alternatively,
+            I could name this method `PutExercise`, or just `Put` and ASP.NET
+            will detect that the word `Put` is in the method name and ensure
+            that it will only be invoke for PUT operations.
+
+            All other controllers have this method named as `Put`. It's named
+            differently here to show that the [HttpPut] attribute enforces which
+            verb is handled.
+         */
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody] Exercise exercise)
+        public async Task<IActionResult> ChangeExercise(int id, [FromBody] Exercise exercise)
         {
             string sql = $@"
             UPDATE Exercise
@@ -179,7 +196,7 @@ namespace NSSWeb.Controllers
             }
         }
 
-        // DELETE api/exercises/5
+        // DELETE /exercises/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
