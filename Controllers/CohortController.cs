@@ -14,11 +14,11 @@ namespace NSSWeb.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    public class StudentsController : ControllerBase
+    public class CohortsController : ControllerBase
     {
         private readonly IConfiguration _config;
 
-        public StudentsController(IConfiguration config)
+        public CohortsController(IConfiguration config)
         {
             _config = config;
         }
@@ -33,7 +33,7 @@ namespace NSSWeb.Controllers
 
         // GET /students
         [HttpGet]
-        public async Task<IActionResult> Get(string q, int? cohort)
+        public async Task<IActionResult> Get()
         {
             string sql = @"
             SELECT
@@ -48,26 +48,6 @@ namespace NSSWeb.Controllers
             JOIN Cohort c ON s.CohortId = c.Id
             WHERE 1=1
             ";
-
-            if (q != null)
-            {
-                string isQ = $@"
-                    AND (s.FirstName LIKE '%{q}%'
-                    OR s.LastName LIKE '%{q}%'
-                    OR s.SlackHandle LIKE '%{q}%')
-                ";
-                sql = $"{sql} {isQ}";
-            }
-
-            if (cohort != null)
-            {
-                string inCohort = $@"
-                    AND (c.Name LIKE '%{cohort}%')
-                ";
-                sql = $"{sql} {inCohort}";
-            }
-
-            Console.WriteLine(sql);
 
             using (IDbConnection conn = Connection)
             {
@@ -85,47 +65,37 @@ namespace NSSWeb.Controllers
         }
 
         // GET /students/5
-        [HttpGet("{id}", Name = "GetStudent")]
+        [HttpGet("{id}", Name = "GetCohort")]
         public async Task<IActionResult> Get([FromRoute]int id)
         {
             string sql = $@"
-            SELECT
-                s.Id,
-                s.FirstName,
-                s.LastName,
-                s.SlackHandle,
-                s.CohortId
-            FROM Student s
-            WHERE s.Id = {id}
+            SELECT c.Id, c.Name
+            FROM Cohort c
+            WHERE c.Id = {id}
             ";
 
             using (IDbConnection conn = Connection)
             {
-                IEnumerable<Student> students = await conn.QueryAsync<Student>(sql);
-                return Ok(students);
+                IEnumerable<Cohort> cohort = await conn.QueryAsync<Cohort>(sql);
+                return Ok(cohort);
             }
         }
 
         // POST /students
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] Student student)
+        public async Task<IActionResult> Post([FromBody] Cohort cohort)
         {
-            string sql = $@"INSERT INTO Student
-            (FirstName, LastName, SlackHandle, CohortId)
+            string sql = $@"INSERT INTO Cohort
+            ( [Name] )
             VALUES
-            (
-                '{student.FirstName}'
-                ,'{student.LastName}'
-                ,'{student.SlackHandle}'
-                ,'{student.CohortId}'
-            );
-            select seq from sqlite_sequence where name='Student';";
+            ( '{cohort.Name}' );
+            select seq from sqlite_sequence where name='Cohort';";
 
             using (IDbConnection conn = Connection)
             {
                 var newId = (await conn.QueryAsync<int>(sql)).Single();
-                student.Id = newId;
-                return CreatedAtRoute("GetStudent", new { id = newId }, student);
+                cohort.Id = newId;
+                return CreatedAtRoute("GetCohort", new { id = newId }, cohort);
             }
         }
 
