@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace NSSWeb.Data
+namespace StudentExercises.Data
 {
     public class Exercise
     {

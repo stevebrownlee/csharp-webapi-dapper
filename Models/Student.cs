@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace NSSWeb.Data
+namespace StudentExercises.Data
 {
     public class Student
     {
@@ -19,9 +19,11 @@ namespace NSSWeb.Data
 
         [Required]
         [Display(Name="Cohort")]
+
         public int CohortId { get; set; }
+
         public Cohort Cohort { get; set; }
+
         public List<Exercise> AssignedExercises { get; set; } = new List<Exercise>();
     }
-
 }

@@ -6,11 +6,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
 using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
-using NSSWeb.Data;
+using StudentExercises.Data;
 using Dapper;
 using Microsoft.AspNetCore.Http;
 
-namespace NSSWeb.Controllers
+namespace StudentExercises.Controllers
 {
     [Route("[controller]")]
     [ApiController]
