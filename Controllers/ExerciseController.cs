@@ -98,7 +98,7 @@ namespace NSSWeb.Controllers
                 {
                     Dictionary<int, Exercise> studentExercises = new Dictionary<int, Exercise>();
 
-                    var fullExercises = await conn.QueryAsync<Exercise, Student, Exercise>(
+                    await conn.QueryAsync<Exercise, Student, object>(
                         sql,
                         (exercise, student) =>
                         {
@@ -107,7 +107,7 @@ namespace NSSWeb.Controllers
                                 studentExercises[exercise.Id] = exercise;
                             }
                             studentExercises[exercise.Id].AssignedStudents.Add(student);
-                            return exercise;
+                            return new {};
                         }
                     );
                     return Ok(studentExercises.Values);
